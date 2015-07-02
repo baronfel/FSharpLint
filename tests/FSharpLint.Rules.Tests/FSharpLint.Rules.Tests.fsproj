@@ -56,6 +56,7 @@
     <Compile Include="TestCyclomaticComplexity.fs" />
     <Compile Include="TestHintMatcher.fs" />
     <Compile Include="TestRaiseWithTooManyArgumentsRules.fs" />
+    <Compile Include="TestConstraintSolver.fs" />
     <None Include="packages.config" />
     <None Include="App.config" />
   </ItemGroup>
@@ -81,6 +82,9 @@
     <Reference Include="Microsoft.Build.Framework, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>C:\Program Files (x86)\MSBuild\12.0\Bin\Microsoft.Build.Framework.dll</HintPath>
       <SpecificVersion>True</SpecificVersion>
+    </Reference>
+    <Reference Include="Microsoft.Z3">
+      <HintPath>..\..\lib\z3\Microsoft.Z3.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
