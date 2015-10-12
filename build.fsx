@@ -4,9 +4,9 @@
 
 #r @"packages/FAKE/tools/FakeLib.dll"
 open Fake 
-open Fake.Git
-open Fake.AssemblyInfoFile
-open Fake.ReleaseNotesHelper
+open ILMergeHelper
+open AssemblyInfoFile
+open ReleaseNotesHelper
 open System
 
 // Information about the project are used
@@ -28,8 +28,8 @@ let summaryApi = "FSharpLint Api (Lint tool for F#)."
 // List of author names (for NuGet package)
 let authors = [ "Matthew Mcveigh" ]
 
-let version = "0.2.7"
-let apiVersion = "0.0.12-beta"
+let version = "0.2.8"
+let apiVersion = "0.0.13"
 
 let packagingRoot = "./packaging/"
 let toolPackagingDir = packagingRoot @@ "tool"
@@ -182,6 +182,33 @@ Target "GenerateDocs" (fun _ ->
 
 // --------------------------------------------------------------------------------------
 // Run all targets by default. Invoke 'build <Target>' to override
+
+let mergeAssemblies =
+     ILMerge (fun x -> 
+        { x with 
+            SearchDirectories = 
+                [ "packages/FSharpLint.0.2.8-beta"
+                  "bin"
+                  "src/FSharpLint.MSBuildIntegration/bin/Release"
+                  "src/FSharpLint.FAKE/bin/Release"
+                  "packages/FAKE/tools" ]
+            ToolPath = "packages/ILMerge.2.14.1208/tools/ILMerge.exe"
+            Version = version
+            TargetPlatform = @"v4,C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5"
+            Libraries = 
+                [ "FParsec.dll"
+                  "FParsecCS.dll"
+                  "FakeLib.dll"
+                  "FSharpLint.Worker.dll"
+                  "FSharpLint.CrossDomain.dll"
+                  "FSharp.Core.dll"
+                  "FSharpLint.Rules.dll"
+                  "FSharpLint.Framework.dll"
+                  "FSharpLint.Application.dll"
+                  "FSharp.Compiler.Service.dll" ] })
+
+Target "MergeMSBuildTask" (fun _ -> mergeAssemblies "FSharpLintMSBuildTask.dll" "FSharpLint.MSBuildIntegration.dll" )
+Target "MergeFakeTask" (fun _ -> mergeAssemblies "FSharpLintFakeTask.dll" "FSharpLint.FAKE.dll" )
 
 Target "All" DoNothing
 
