@@ -1,0 +1,7 @@
+source https://nuget.org/api/v2
+
+nuget Castle.Windsor-log4net >= 3.2
+nuget NUnit >= 2.6.3
+nuget FSharp.Compiler.Service >= 1.4.0.6
+nuget FAKE.Lib >= 3.33.0
+nuget ILMerge >= 2.14.1208
