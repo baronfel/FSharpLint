@@ -1,34 +1,39 @@
 ﻿module FSharpLint.FAKE
 
+open System
 open Fake
-open FSharpLint.Worker
-open FSharpLint.Application.AppDomainWorker
+open FSharpLint.Application
+open FSharpLint.Application.FSharpLintWorker
 
 let private printException (e:System.Exception) =
     "Exception Message:" + e.Message + "Exception Stack Trace:" + e.StackTrace
-        |> System.Console.WriteLine
+        |> Console.WriteLine
 
 let private failedToParseFileError (file:string) parseException =
     printfn "%A" file
     printException parseException
 
 /// the default only prints something if FSharpLint found a lint in a file
-let private defaultProgress (progress:Progress) = 
-    match progress.State with
-        | Progress.ProgressType.Failed ->
-            failedToParseFileError progress.Filename progress.Exception
-        | _ -> ()
+let private defaultProgress = function
+    | Failed(file, e) ->
+        failedToParseFileError file e
+    | Starting(_) | ReachedEnd(_) -> ()
 
-let private defaultErrorReceived (error:Error) =
-    error.Info + System.Environment.NewLine + error.FormattedError
+let private defaultErrorReceived (error:LintWarning.Warning) =
+    let formattedError = LintWarning.getWarningWithLocation error.Range error.Input
+
+    error.Info + System.Environment.NewLine + formattedError
         |> System.Console.WriteLine
 
+type LintOptions =
+    { Progress: ProjectProgress -> unit
+      ErrorReceived: LintWarning.Warning -> unit
+      FailBuildIfAnyWarnings: bool }
+
 let defaultLintOptions =
-    {
-        Progress = System.Action<Progress>(defaultProgress)
-        ErrorReceived = System.Action<Error>(defaultErrorReceived)
-        FailBuildIfAnyWarnings = false
-    }
+    { Progress = defaultProgress
+      ErrorReceived = defaultErrorReceived
+      FailBuildIfAnyWarnings = false }
 
 /// Runs FSharpLint on a project.
 /// ## Parameters
@@ -50,29 +55,22 @@ let FSharpLint (setParams: LintOptions->LintOptions) (projectFile: string) =
     
     let errorReceived error = 
         incr numberOfWarnings
-        parameters.ErrorReceived.Invoke(error)
+        parameters.ErrorReceived error
 
-    let parserProgress (progress:Progress) =
-        if progress.State = Progress.ProgressType.ReachedEnd then
+    let parserProgress progress =
+        match progress with
+        | ReachedEnd(_) ->
             incr numberOfFiles
+        | _ -> ()
 
-        parameters.Progress.Invoke(progress)
+        parameters.Progress progress
 
-    let options = 
-        { 
-            Progress = System.Action<_>(parserProgress)
-            ErrorReceived = System.Action<_>(errorReceived)
-            FailBuildIfAnyWarnings = parameters.FailBuildIfAnyWarnings
-        }
-
-    use worker = new AppDomainWorker()
-    let result = worker.RunLint projectFile options
-
-    if result.IsSuccess && parameters.FailBuildIfAnyWarnings && !numberOfWarnings > 0 then
+    match runLint projectFile errorReceived parserProgress with
+    | Success when parameters.FailBuildIfAnyWarnings && !numberOfWarnings > 0 ->
         failwithf "Linted %s and failed the build as warnings were found. Linted %d files and found %d warnings." projectFile !numberOfFiles !numberOfWarnings
-    else if result.IsSuccess then
+    | Success -> 
         tracefn "Successfully linted %s. Linted %d files and found %d warnings." projectFile !numberOfFiles !numberOfWarnings
-    else
-        sprintf "Failed to lint %s. Failed with: %s" projectFile result.Message |> traceError
+    | Failure(message) -> 
+        sprintf "Failed to lint %s. Failed with: %s" projectFile message |> traceError
 
     traceEndTask "FSharpLint" projectFile

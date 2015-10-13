@@ -19,80 +19,48 @@
 namespace FSharpLint.MSBuildIntegration
 
 open System
-open FSharpLint.Application.AppDomainWorker
+open Microsoft.Build.Framework
+open Microsoft.Build.Utilities
+open FSharpLint.Application
+open FSharpLint.Application.FSharpLintWorker
 
 type FSharpLintTask() = 
-    inherit Microsoft.Build.Utilities.Task()
+    inherit Task()
 
-    [<Microsoft.Build.Framework.Required>]
+    [<Required>]
     member val Project = "" with get, set
 
     member val TreatWarningsAsErrors = false with get, set
 
     override this.Execute() = 
-        let directory = System.Reflection.Assembly.GetAssembly(this.GetType()).Location
-                        |> System.IO.Path.GetDirectoryName
-
-        let resolveAssembly _ (args:ResolveEventArgs) =
-            let assembly = 
-                try 
-                    match System.Reflection.Assembly.Load(args.Name) with
-                        | null -> None
-                        | assembly -> Some(assembly)
-                with _ -> None
-
-            match assembly with
-                | Some(assembly) -> assembly
-                | None -> 
-                    let parts = args.Name.Split(',')
-                    let file = System.IO.Path.Combine(directory, parts.[0].Trim() + ".dll")
-
-                    System.Reflection.Assembly.LoadFrom(file)
-
-        let resolveAssemblyHandler = System.ResolveEventHandler(resolveAssembly)
-            
-        System.AppDomain.CurrentDomain.add_AssemblyResolve(resolveAssemblyHandler)
-        
-        // Cannot close over `this` in the function passed to `RunLint` or it'll try to serialize `this` (which will throw an exception).
-        let treatWarningsAsErrors = this.TreatWarningsAsErrors
         let logWarning:(string * string * string * string * int * int * int * int * string * obj[]) -> unit = this.Log.LogWarning
         let logError:(string * string * string * string * int * int * int * int * string * obj[]) -> unit = this.Log.LogError
         let logFailure:(string -> unit) = this.Log.LogWarning
         
-        let progress (progress:FSharpLint.Worker.Progress) =
-            if progress.State = FSharpLint.Worker.Progress.ProgressType.Failed then
+        let progress = function
+            | Failed(file, e) ->
                 sprintf 
                     "Failed to parse file %s, Exception Message: %s \nException Stack Trace: %s"
-                    progress.Filename
-                    progress.Exception.Message
-                    progress.Exception.StackTrace
-                    |> logFailure
+                    file
+                    e.Message 
+                    e.StackTrace
+                |> logFailure
+            | Starting(_) | ReachedEnd(_) -> ()
         
-        let errorReceived (error:FSharpLint.Worker.Error) = 
+        let errorReceived (error:LintWarning.Warning) = 
             let filename = error.Range.FileName
             let startLine = error.Range.StartLine
             let startColumn = error.Range.StartColumn + 1
             let endLine = error.Range.EndLine
             let endColumn = error.Range.EndColumn + 1
 
-            if treatWarningsAsErrors then
+            if this.TreatWarningsAsErrors then
                 logError("", "", "", filename, startLine, startColumn, endLine, endColumn, error.Info, null)
             else
                 logWarning("", "", "", filename, startLine, startColumn, endLine, endColumn, error.Info, null)
-        
-        let options = 
-            { 
-                Progress = System.Action<_>(progress)
-                ErrorReceived = System.Action<_>(errorReceived)
-                FailBuildIfAnyWarnings = treatWarningsAsErrors
-            }
-        
-        use worker = new AppDomainWorker()
-        let result = worker.RunLint this.Project options
 
-        if not result.IsSuccess then
-            logFailure result.Message
-            
-        System.AppDomain.CurrentDomain.remove_AssemblyResolve(resolveAssemblyHandler)
+        match runLint this.Project errorReceived progress with
+        | Failure(message) -> logFailure message
+        | Success -> ()
 
         true
