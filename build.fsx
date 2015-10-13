@@ -192,7 +192,7 @@ let mergeAssemblies =
                   "src/FSharpLint.MSBuildIntegration/bin/Release"
                   "src/FSharpLint.FAKE/bin/Release"
                   "packages/FAKE/tools" ]
-            ToolPath = "packages/ILMerge.2.14.1208/tools/ILMerge.exe"
+            ToolPath = "packages/ilmerge/tools/ILMerge.exe"
             Version = version
             TargetPlatform = @"v4,C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5"
             Libraries = 
