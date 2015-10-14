@@ -34,9 +34,6 @@ module HintMatcher =
     [<Literal>]
     let AnalyserName = "Hints"
 
-    let isAnalyserEnabled config =
-        (isAnalyserEnabled config AnalyserName).IsSome
-
     let rec extractSimplePatterns = function
         | SynSimplePats.SimplePats(simplePatterns, _) -> 
             simplePatterns
@@ -583,9 +580,10 @@ module HintMatcher =
         | _ -> true
 
     let visitor getHints visitorInfo checkFile (astNode:CurrentNode) = 
-        if isAnalyserEnabled visitorInfo.Config && astNode.IsSuppressed(AnalyserName) |> not then
+        if astNode.IsSuppressed(AnalyserName) |> not then
             match astNode.Node with
-            | AstNode.Expression(SynExpr.Paren(_)) -> Continue
+            | AstNode.Expression(SynExpr.Paren(_))
+            | AstNode.Pattern(SynPat.Paren(_)) -> Continue
             | AstNode.Expression(expr) -> 
                 for hint in getHints visitorInfo.Config do
                     let arguments =
@@ -604,7 +602,6 @@ module HintMatcher =
                             hintError hint visitorInfo expr.Range
 
                 Continue
-            | AstNode.Pattern(SynPat.Paren(_)) -> Continue
             | AstNode.Pattern(pattern) ->
                 for hint in getHints visitorInfo.Config do
                     if MatchPattern.matchHintPattern (pattern, hint.Match) then

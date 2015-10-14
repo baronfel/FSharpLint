@@ -160,13 +160,19 @@ module Lint =
                     
     module LoadPlugins =
 
+        open FSharpLint.Framework.Configuration
+        open LoadVisitors
+
         /// Loaded visitors implementing lint rules.
         let plugins =
             typeof<FSharpLint.Rules.Binding.RegisterBindingVisitor>.Assembly
-            |> LoadVisitors.loadPlugins
+            |> loadPlugins
+
+        let isVisitorEnabled config visitor =
+            isAnalyserEnabled config visitor.Name |> Option.isSome
 
         /// Extracts a list of ast visitors from a general list of visitors.
-        let astVisitors (plugins:LoadVisitors.VisitorPlugin list) visitorInfo =
+        let astVisitors plugins visitorInfo =
             [ for plugin in plugins do
                 match plugin.Visitor with
                 | LoadVisitors.Ast(visitor) -> 
@@ -174,7 +180,7 @@ module Lint =
                 | LoadVisitors.PlainText(_) -> () ]
         
         /// Extracts a list of plain text visitors from a general list of visitors.
-        let plainTextVisitors (plugins:LoadVisitors.VisitorPlugin list) visitorInfo =
+        let plainTextVisitors plugins visitorInfo =
             [ for plugin in plugins do
                 match plugin.Visitor with
                 | LoadVisitors.Ast(_) -> ()
@@ -201,13 +207,17 @@ module Lint =
                   Ast.Config = lintInfo.Configuration
                   Ast.PostError = postError }
 
+            let enabledPlugins =
+                lintInfo.RulePlugins
+                |> List.filter (LoadPlugins.isVisitorEnabled visitorInfo.Config)
+
             let visitPlainText = async {
                     let suppressMessageAttributes =
                         if parsedFileInfo.PlainText.Contains("SuppressMessage") then
                             Ast.getSuppressMessageAttributesFromAst parsedFileInfo.Ast
                         else []
 
-                    for visitor in LoadPlugins.plainTextVisitors lintInfo.RulePlugins visitorInfo do
+                    for visitor in LoadPlugins.plainTextVisitors enabledPlugins visitorInfo do
                         visitor 
                             { Input = parsedFileInfo.PlainText
                               File = parsedFileInfo.File
@@ -216,8 +226,8 @@ module Lint =
 
             let visitAst = async {
                     try
-                        LoadPlugins.astVisitors lintInfo.RulePlugins visitorInfo
-                            |> Ast.lintFile lintInfo.FinishEarly parsedFileInfo
+                        LoadPlugins.astVisitors enabledPlugins visitorInfo
+                        |> Ast.lintFile lintInfo.FinishEarly parsedFileInfo
                     with 
                     | e -> Failed(parsedFileInfo.File, e) |> lintInfo.ReportLinterProgress
                 }

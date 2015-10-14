@@ -28,9 +28,6 @@ module Typography =
     [<Literal>]
     let AnalyserName = "Typography"
 
-    let isAnalyserEnabled config =
-        isAnalyserEnabled config AnalyserName |> Option.isSome
-
     let isEnabled ruleName config =
         isRuleEnabled config AnalyserName ruleName |> Option.isSome
 
@@ -166,17 +163,16 @@ module Typography =
         NoTabCharacters.checkNoTabCharacters mkRange visitorInfo line lineNumber suppressMessageAttributes
 
     let visitor (visitorInfo:VisitorInfo) (plaintextVisitorInfo:PlainTextVisitorInfo) = 
-        if isAnalyserEnabled visitorInfo.Config then
-            let mkRange = mkRange plaintextVisitorInfo.File
+        let mkRange = mkRange plaintextVisitorInfo.File
 
-            let lines = 
-                plaintextVisitorInfo.Input.Split([|"\n"|], System.StringSplitOptions.None)
-                    |> Array.map (fun line -> line.TrimEnd('\r'))
+        let lines = 
+            plaintextVisitorInfo.Input.Split([|"\n"|], System.StringSplitOptions.None)
+                |> Array.map (fun line -> line.TrimEnd('\r'))
 
-            lines |> Array.iteri (analyseLine visitorInfo mkRange plaintextVisitorInfo)
+        lines |> Array.iteri (analyseLine visitorInfo mkRange plaintextVisitorInfo)
 
-            TrailingNewLineInFile.checkTrailingNewLineInFile mkRange visitorInfo plaintextVisitorInfo.Input lines
-            MaxLinesInFile.checkMaxLinesInFile mkRange visitorInfo lines
+        TrailingNewLineInFile.checkTrailingNewLineInFile mkRange visitorInfo plaintextVisitorInfo.Input lines
+        MaxLinesInFile.checkMaxLinesInFile mkRange visitorInfo lines
 
     type RegisterTypographyVisitor() = 
         let plugin =

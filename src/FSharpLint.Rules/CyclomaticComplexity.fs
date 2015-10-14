@@ -45,16 +45,13 @@ module CyclomaticComplexity =
                     | _ -> true
             | Some(_)
             | None -> true
-
-    let isAnalyserEnabled config =
-        isAnalyserEnabled config AnalyserName |> Option.isSome
     
     let rec countDecisionPathsVisitor visitorInfo checkFile range count astNode : VisitorResult = 
         let visitor = countDecisionPathsVisitor visitorInfo checkFile range
         let finishedWalk = finishedWalk visitorInfo range
 
         match astNode.Node with
-            | AstNode.Expression(expression) when isAnalyserEnabled visitorInfo.Config ->
+            | AstNode.Expression(expression) ->
                 match expression with
                     | SynExpr.For(_)
                     | SynExpr.ForEach(_)
