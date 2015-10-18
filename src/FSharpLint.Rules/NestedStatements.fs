@@ -112,4 +112,4 @@ module NestedStatements =
             }
 
         interface IRegisterPlugin with
-            member __.RegisterPlugin with get() = plugin
+            member __.RegisterPlugin _ = plugin

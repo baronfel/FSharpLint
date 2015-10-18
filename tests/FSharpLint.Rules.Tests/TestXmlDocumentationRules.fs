@@ -54,7 +54,7 @@ let config name access =
 
 [<TestFixture>]
 type TestNameConventionRulesModule() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config "ModuleDefinitionHeader" Access.All)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config "ModuleDefinitionHeader" Access.All)
 
     [<Test>]
     member this.ModuleWithDoubleDashComment() =
@@ -122,7 +122,7 @@ exception SomeException of string"""
 
 [<TestFixture>]
 type TestNameConventionRulesException() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config "ExceptionDefinitionHeader" Access.All)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config "ExceptionDefinitionHeader" Access.All)
 
     [<Test>]
     member this.ExceptionWithDoubleDashComment() =
@@ -189,7 +189,7 @@ exception SomeException of string"""
 
 [<TestFixture>]
 type TestNameConventionRulesType() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config "TypeDefinitionHeader" Access.All)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config "TypeDefinitionHeader" Access.All)
 
     [<Test>]
     member this.TypeNoComment() =
@@ -275,7 +275,7 @@ type Colors = Red=0 | Green=1 | Blue=2
 
 [<TestFixture>]
 type TestNameConventionRulesMember() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config "MemberDefinitionHeader" Access.All)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config "MemberDefinitionHeader" Access.All)
 
     [<Test>]
     member this.MemberNoComment() =
@@ -352,7 +352,7 @@ type IsAType =
 
 [<TestFixture>]
 type TestNameConventionRulesEnum() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config "EnumDefinitionHeader" Access.All)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config "EnumDefinitionHeader" Access.All)
 
     [<Test>]
     member this.EnumNoComment() =
@@ -465,7 +465,7 @@ type Colors =
 
 [<TestFixture>]
 type TestNameConventionRulesUnion() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config "UnionDefinitionHeader" Access.All)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config "UnionDefinitionHeader" Access.All)
 
     [<Test>]
     member this.UnionNoComment() =
@@ -599,7 +599,7 @@ type OrderId =
 
 [<TestFixture>]
 type TestNameConventionRulesRecord() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config "RecordDefinitionHeader" Access.All)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config "RecordDefinitionHeader" Access.All)
 
     [<Test>]
     member this.RecordNoComment() =
@@ -704,7 +704,7 @@ type GeoCoord = {
 
 [<TestFixture>]
 type TestNameConventionRulesAutoProperty() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config "AutoPropertyDefinitionHeader" Access.All)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config "AutoPropertyDefinitionHeader" Access.All)
 
     [<Test>]
     member this.AutoPropertyNoComment() =
@@ -803,7 +803,7 @@ type GeoCoord() =
 
 [<TestFixture>]
 type TestNameConventionRulesLet() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config "LetDefinitionHeader" Access.All)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config "LetDefinitionHeader" Access.All)
 
     [<Test>]
     member this.LetNoComment() =
@@ -920,7 +920,7 @@ type Sample() =
 
 [<TestFixture>]
 type TestNameConventionRulesTypeAccessNotPrivate() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config "TypeDefinitionHeader" Access.NotPrivate)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config "TypeDefinitionHeader" Access.NotPrivate)
 
     [<Test>]
     member this.PublicTypeNoComment() =

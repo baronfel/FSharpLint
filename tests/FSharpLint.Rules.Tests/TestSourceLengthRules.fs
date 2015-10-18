@@ -116,7 +116,7 @@ let generateNewLines numNewLines = Array.create numNewLines "\n" |> String.conca
 
 [<TestFixture>]
 type TestSourceLengthRules() = 
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config)
     
     [<Test>]
     member this.ModuleTooManyLines() = 

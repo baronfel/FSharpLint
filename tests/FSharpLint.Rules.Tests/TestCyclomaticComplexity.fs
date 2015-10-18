@@ -43,7 +43,7 @@ let config includeMatchStatements =
 
 [<TestFixture>]
 type TestFunctionReimplementationRules() =
-    inherit TestRuleBase.TestRuleBase(Ast(findBindingVisitor))
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(findBindingVisitor)))
 
     member this.AssertComplexityOf(cyclomaticComplexity, startLine, startColumn) =
         let errorFormatString = FSharpLint.Framework.Resources.GetString("RulesCyclomaticComplexityError")

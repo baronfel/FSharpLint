@@ -164,12 +164,16 @@ module Lint =
         open LoadVisitors
 
         /// Loaded visitors implementing lint rules.
-        let plugins =
+        let private plugins =
             typeof<FSharpLint.Rules.Binding.RegisterBindingVisitor>.Assembly
             |> loadPlugins
 
-        let isVisitorEnabled config visitor =
-            isAnalyserEnabled config visitor.Name |> Option.isSome
+        let getPlugins config =
+            plugins |> List.choose (fun plugin -> 
+                let analyser = plugin.RegisterPlugin config
+                match isAnalyserEnabled config analyser.Name with
+                | Some(_) -> Some(analyser)
+                | None -> None)
 
         /// Extracts a list of ast visitors from a general list of visitors.
         let astVisitors plugins visitorInfo =
@@ -207,17 +211,13 @@ module Lint =
                   Ast.Config = lintInfo.Configuration
                   Ast.PostError = postError }
 
-            let enabledPlugins =
-                lintInfo.RulePlugins
-                |> List.filter (LoadPlugins.isVisitorEnabled visitorInfo.Config)
-
             let visitPlainText = async {
                     let suppressMessageAttributes =
                         if parsedFileInfo.PlainText.Contains("SuppressMessage") then
                             Ast.getSuppressMessageAttributesFromAst parsedFileInfo.Ast
                         else []
 
-                    for visitor in LoadPlugins.plainTextVisitors enabledPlugins visitorInfo do
+                    for visitor in LoadPlugins.plainTextVisitors lintInfo.RulePlugins visitorInfo do
                         visitor 
                             { Input = parsedFileInfo.PlainText
                               File = parsedFileInfo.File
@@ -226,7 +226,7 @@ module Lint =
 
             let visitAst = async {
                     try
-                        LoadPlugins.astVisitors enabledPlugins visitorInfo
+                        LoadPlugins.astVisitors lintInfo.RulePlugins visitorInfo
                         |> Ast.lintFile lintInfo.FinishEarly parsedFileInfo
                     with 
                     | e -> Failed(parsedFileInfo.File, e) |> lintInfo.ReportLinterProgress
@@ -324,7 +324,7 @@ module Lint =
         let parseFilesInProject config files projectOptions =
             let lintInformation =
                 { Configuration = config
-                  RulePlugins = LoadPlugins.plugins
+                  RulePlugins = LoadPlugins.getPlugins config
                   FinishEarly = match optionalParams.FinishEarly with Some(f) -> f | None -> fun _ -> false
                   ErrorReceived = warningReceived
                   ReportLinterProgress = projectProgress
@@ -391,7 +391,7 @@ module Lint =
 
         let lintInformation =
             { Configuration = config
-              RulePlugins = LoadPlugins.plugins
+              RulePlugins = LoadPlugins.getPlugins config
               FinishEarly = match optionalParams.FinishEarly with Some(f) -> f | None -> fun _ -> false
               ErrorReceived = warningReceived
               ReportLinterProgress = ignore
@@ -444,7 +444,7 @@ module Lint =
         
         let lintInformation =
             { Configuration = config
-              RulePlugins = LoadPlugins.plugins
+              RulePlugins = LoadPlugins.getPlugins config
               FinishEarly = match optionalParams.FinishEarly with Some(f) -> f | None -> fun _ -> false
               ErrorReceived = warningReceived
               ReportLinterProgress = ignore

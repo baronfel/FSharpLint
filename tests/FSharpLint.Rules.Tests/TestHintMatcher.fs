@@ -41,7 +41,7 @@ let generateHintConfig hints =
     
 [<TestFixture>]
 type TestHintMatcher() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor getHintsFromConfig))
+    inherit TestRuleBase.TestRuleBase(getHintsFromConfig >> visitor >> Ast)
 
     [<Test>]
     member this.MatchNotEqualHint() = 

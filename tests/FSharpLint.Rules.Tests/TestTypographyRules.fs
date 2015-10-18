@@ -85,7 +85,7 @@ let config = setupConfig 0 false false
 
 [<TestFixture>]
 type TestNestedStatements() =
-    inherit TestRuleBase.TestRuleBase(PlainText(visitor), config)
+    inherit TestRuleBase.TestRuleBase((fun _ -> PlainText(visitor)), config)
 
     [<Test>]
     member this.TooManyCharactersOnLine() = 

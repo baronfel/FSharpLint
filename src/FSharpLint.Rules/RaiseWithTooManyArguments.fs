@@ -31,8 +31,8 @@ module RaiseWithTooManyArguments =
 
     let isRuleEnabled config ruleName =
         match isRuleEnabled config AnalyserName ruleName with
-            | Some(_) -> true
-            | None -> false
+        | Some(_) -> true
+        | None -> false
 
     let (|RaiseWithTooManyArgs|_|) identifier maxArgs = function
         | SynExpr.Ident(ident)::arguments when List.length arguments > maxArgs && ident.idText = identifier ->
@@ -46,11 +46,9 @@ module RaiseWithTooManyArguments =
         | _ -> None
 
     type private CheckFunctionInfo =
-        {
-            RuleName: string
-            ResourceStringName: string
-            Range: range
-        }
+        { RuleName: string
+          ResourceStringName: string
+          Range: range }
 
     let private checkFunction visitorInfo (astNode:CurrentNode) checkFunctionInfo hasTooManyArguments =
         let ruleIsEnabled = checkFunctionInfo.RuleName |> isRuleEnabled visitorInfo.Config &&
@@ -64,102 +62,88 @@ module RaiseWithTooManyArguments =
     let checkFailwith visitorInfo astNode flattenedExpression range =
         let hasTooManyArguments () =
             match flattenedExpression with
-                | RaiseWithTooManyArgs "failwith" 1 -> true
-                | _ -> false
+            | RaiseWithTooManyArgs "failwith" 1 -> true
+            | _ -> false
 
         checkFunction visitorInfo astNode
-            {
-                RuleName = "FailwithWithSingleArgument"
-                ResourceStringName = "RulesFailwithWithSingleArgument"
-                Range = range
-            } hasTooManyArguments
+            { RuleName = "FailwithWithSingleArgument"
+              ResourceStringName = "RulesFailwithWithSingleArgument"
+              Range = range } hasTooManyArguments
 
     let checkRange visitorInfo astNode flattenedExpression range =
         let hasTooManyArguments () =
             match flattenedExpression with
-                | RaiseWithTooManyArgs "raise" 1 -> true
-                | _ -> false
+            | RaiseWithTooManyArgs "raise" 1 -> true
+            | _ -> false
 
         checkFunction visitorInfo astNode
-            {
-                RuleName = "RaiseWithSingleArgument"
-                ResourceStringName = "RulesRaiseWithSingleArgument"
-                Range = range
-            } hasTooManyArguments
+            { RuleName = "RaiseWithSingleArgument"
+              ResourceStringName = "RulesRaiseWithSingleArgument"
+              Range = range } hasTooManyArguments
 
     let checkNullArg visitorInfo astNode flattenedExpression range =
         let hasTooManyArguments () =
             match flattenedExpression with
-                | RaiseWithTooManyArgs "nullArg" 1 -> true
-                | _ -> false
+            | RaiseWithTooManyArgs "nullArg" 1 -> true
+            | _ -> false
 
         checkFunction visitorInfo astNode
-            {
-                RuleName = "NullArgWithSingleArgument"
-                ResourceStringName = "RulesNullArgWithSingleArgument"
-                Range = range
-            } hasTooManyArguments
+            { RuleName = "NullArgWithSingleArgument"
+              ResourceStringName = "RulesNullArgWithSingleArgument"
+              Range = range } hasTooManyArguments
 
     let checkInvalidOp visitorInfo astNode flattenedExpression range =
         let hasTooManyArguments () =
             match flattenedExpression with
-                | RaiseWithTooManyArgs "invalidOp" 1 -> true
-                | _ -> false
+            | RaiseWithTooManyArgs "invalidOp" 1 -> true
+            | _ -> false
 
         checkFunction visitorInfo astNode
-            {
-                RuleName = "InvalidOpWithSingleArgument"
-                ResourceStringName = "RulesInvalidOpWithSingleArgument"
-                Range = range
-            } hasTooManyArguments
+            { RuleName = "InvalidOpWithSingleArgument"
+              ResourceStringName = "RulesInvalidOpWithSingleArgument"
+              Range = range } hasTooManyArguments
 
     let checkInvalidArg visitorInfo astNode flattenedExpression range =
         let hasTooManyArguments () =
             match flattenedExpression with
-                | RaiseWithTooManyArgs "invalidArg" 2 -> true
-                | _ -> false
+            | RaiseWithTooManyArgs "invalidArg" 2 -> true
+            | _ -> false
 
         checkFunction visitorInfo astNode
-            {
-                RuleName = "InvalidArgWithTwoArguments"
-                ResourceStringName = "RulesInvalidArgWithTwoArguments"
-                Range = range
-            } hasTooManyArguments
+            { RuleName = "InvalidArgWithTwoArguments"
+              ResourceStringName = "RulesInvalidArgWithTwoArguments"
+              Range = range } hasTooManyArguments
 
     let checkFailwithf visitorInfo astNode flattenedExpression range =
         let hasTooManyArguments () =
             match flattenedExpression with
-                | RaiseWithFormatStringTooManyArgs "failwithf" -> true
-                | _ -> false
+            | RaiseWithFormatStringTooManyArgs "failwithf" -> true
+            | _ -> false
 
         checkFunction visitorInfo astNode
-            {
-                RuleName = "FailwithfWithArgumentsMatchingFormatString"
-                ResourceStringName = "RulesFailwithfWithArgumentsMatchingFormatString"
-                Range = range
-            } hasTooManyArguments
+            { RuleName = "FailwithfWithArgumentsMatchingFormatString"
+              ResourceStringName = "RulesFailwithfWithArgumentsMatchingFormatString"
+              Range = range } hasTooManyArguments
     
     let visitor visitorInfo _ astNode = 
         match astNode.Node with
-            | AstNode.Expression(SynExpr.App(_, _, _, _, range) as expr) -> 
-                let flattenedExpression = FSharpLint.Framework.ExpressionUtilities.flattenFunctionApplication expr
+        | AstNode.Expression(SynExpr.App(_, _, _, _, range) as expr) -> 
+            let flattenedExpression = FSharpLint.Framework.ExpressionUtilities.flattenFunctionApplication expr
                 
-                checkFailwith visitorInfo astNode flattenedExpression range
-                checkRange visitorInfo astNode flattenedExpression range
-                checkNullArg visitorInfo astNode flattenedExpression range
-                checkInvalidOp visitorInfo astNode flattenedExpression range
-                checkInvalidArg visitorInfo astNode flattenedExpression range
-                checkFailwithf visitorInfo astNode flattenedExpression range
-            | _ -> ()
+            checkFailwith visitorInfo astNode flattenedExpression range
+            checkRange visitorInfo astNode flattenedExpression range
+            checkNullArg visitorInfo astNode flattenedExpression range
+            checkInvalidOp visitorInfo astNode flattenedExpression range
+            checkInvalidArg visitorInfo astNode flattenedExpression range
+            checkFailwithf visitorInfo astNode flattenedExpression range
+        | _ -> ()
 
         Continue
 
     type RegisterBindingVisitor() = 
         let plugin =
-            {
-                Name = AnalyserName
-                Visitor = Ast(visitor)
-            }
+            { Name = AnalyserName
+              Visitor = Ast(visitor) }
 
         interface IRegisterPlugin with
-            member __.RegisterPlugin with get() = plugin
+            member __.RegisterPlugin _ = plugin

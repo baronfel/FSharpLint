@@ -177,4 +177,4 @@ module Binding =
               Visitor = Ast(visitor) }
 
         interface IRegisterPlugin with
-            member __.RegisterPlugin = plugin
+            member __.RegisterPlugin _ = plugin

@@ -39,7 +39,7 @@ let config =
 
 [<TestFixture>]
 type TestNestedStatements() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor 0), config)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor 0)), config)
 
     [<Test>]
     member this.NestedTooDeep() = 

@@ -46,7 +46,7 @@ let config =
 
 [<TestFixture>]
 type TestNameConventionRules() =
-    inherit TestRuleBase.TestRuleBase(Ast(visitor), config)
+    inherit TestRuleBase.TestRuleBase((fun _ -> Ast(visitor)), config)
 
     [<Test>]
     member __.IsPascalCase() = 

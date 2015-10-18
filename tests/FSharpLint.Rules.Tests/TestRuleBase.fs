@@ -27,46 +27,35 @@ open FSharpLint.Framework.LoadVisitors
 open FSharpLint.Framework.ParseFile
 
 let emptyConfig =
-    {
-        UseTypeChecker = Some(false)
-        IgnoreFiles = Some({ Files = []; Update = IgnoreFiles.Add; Content = "" })
-        Analysers =
-            Map.ofList
-                [
-                    ("", {
-                        Rules = Map.ofList [ ("", { Settings = Map.ofList [ ("", Enabled(true)) ] }) ]
-                        Settings = Map.ofList []
-                    })
-                ]
-    }
+    { UseTypeChecker = Some(false)
+      IgnoreFiles = Some({ Files = []; Update = IgnoreFiles.Add; Content = "" })
+      Analysers =
+          Map.ofList
+                [ ("", { Rules = Map.ofList [ ("", { Settings = Map.ofList [ ("", Enabled(true)) ] }) ]
+                         Settings = Map.ofList [] }) ] }
 
 [<AbstractClass>]
-type TestRuleBase(analyser:VisitorType, ?analysers) =
+type TestRuleBase(analyser:Configuration -> VisitorType, ?analysers) =
     let errorRanges = System.Collections.Generic.List<range * string>()
 
-    let postError (range:range) error =
-        errorRanges.Add(range, error)
+    let postError (range:range) error = errorRanges.Add(range, error)
 
     let config =
         match analysers with
-            | Some(analysers) -> 
-                { 
-                    UseTypeChecker = Some(false)
-                    IgnoreFiles = Some({ Files = []; Update = IgnoreFiles.Add; Content = "" })
-                    Analysers = analysers 
-                }
-            | None -> emptyConfig
+        | Some(analysers) -> 
+            { UseTypeChecker = Some(false)
+              IgnoreFiles = Some({ Files = []; Update = IgnoreFiles.Add; Content = "" })
+              Analysers = analysers }
+        | None -> emptyConfig
 
     member __.Parse(input:string, ?overrideAnalysers, ?checkInput, ?fsharpVersion) = 
         let config =
             match overrideAnalysers with
-                | Some(overrideAnalysers) -> 
-                    { 
-                        UseTypeChecker = Some(false)
-                        IgnoreFiles = Some({ Files = []; Update = IgnoreFiles.Add; Content = "" })
-                        Analysers = overrideAnalysers 
-                    }
-                | None -> config
+            | Some(overrideAnalysers) -> 
+                { UseTypeChecker = Some(false)
+                  IgnoreFiles = Some({ Files = []; Update = IgnoreFiles.Add; Content = "" })
+                  Analysers = overrideAnalysers }
+            | None -> config
 
         let checkInput = match checkInput with | Some(x) -> x | None -> false
 
@@ -76,56 +65,50 @@ type TestRuleBase(analyser:VisitorType, ?analysers) =
 
         let visitorInfo = { Config = config; PostError = postError; FSharpVersion = version }
         
-        match parseSource input config (FSharpChecker.Create()), analyser with
-            | Success(parseInfo), Ast(visitor) ->
-                lintFile (fun _ -> false) parseInfo [visitor visitorInfo]
-            | Success(parseInfo), PlainText(visitor) -> 
-                let suppressedMessages = getSuppressMessageAttributesFromAst parseInfo.Ast
-                visitor visitorInfo { File = ""; Input = input; SuppressedMessages = suppressedMessages }
-            | _ -> failwith "Failed to parse input."
+        match parseSource input config (FSharpChecker.Create()), analyser config with
+        | Success(parseInfo), Ast(visitor) ->
+            lintFile (fun _ -> false) parseInfo [visitor visitorInfo]
+        | Success(parseInfo), PlainText(visitor) -> 
+            let suppressedMessages = getSuppressMessageAttributesFromAst parseInfo.Ast
+            visitor visitorInfo { File = ""; Input = input; SuppressedMessages = suppressedMessages }
+        | _ -> failwith "Failed to parse input."
 
     member __.ErrorExistsAt(startLine, startColumn) =
         errorRanges
-            |> Seq.exists (fun (r, _) -> r.StartLine = startLine && r.StartColumn = startColumn)
+        |> Seq.exists (fun (r, _) -> r.StartLine = startLine && r.StartColumn = startColumn)
 
     member __.ErrorsAt(startLine, startColumn) =
         errorRanges
-            |> Seq.filter (fun (r, _) -> r.StartLine = startLine && r.StartColumn = startColumn)
+        |> Seq.filter (fun (r, _) -> r.StartLine = startLine && r.StartColumn = startColumn)
 
     member __.ErrorExistsOnLine(startLine) =
-        errorRanges
-            |> Seq.exists (fun (r, _) -> r.StartLine = startLine)
+        errorRanges |> Seq.exists (fun (r, _) -> r.StartLine = startLine)
 
     member __.NoErrorExistsOnLine(startLine) =
         errorRanges
-            |> Seq.exists (fun (r, _) -> r.StartLine = startLine)
-            |> not
+        |> Seq.exists (fun (r, _) -> r.StartLine = startLine)
+        |> not
 
     // prevent tests from passing if errors exist, just not on the line being checked
-    member __.NoErrorsExist =
-        errorRanges
-            |> Seq.isEmpty
+    member __.NoErrorsExist = errorRanges |> Seq.isEmpty
 
-    member __.ErrorsExist =
-        errorRanges
-            |> Seq.isEmpty |> not
+    member __.ErrorsExist = errorRanges |> Seq.isEmpty |> not
 
     member __.ErrorMsg =
         match errorRanges with
         | xs when xs.Count = 0 -> "No errors"
         | _ ->
             errorRanges
-                |> Seq.map (fun (r, err) -> (sprintf "((%i, %i) - (%i, %i) -> %s)"
-                    r.StartRange.StartLine r.StartColumn r.EndRange.EndLine r.EndRange.EndColumn err ))
-                |> (fun x -> System.String.Join("; ", x))
+            |> Seq.map (fun (r, err) -> (sprintf "((%i, %i) - (%i, %i) -> %s)"
+                r.StartRange.StartLine r.StartColumn r.EndRange.EndLine r.EndRange.EndColumn err ))
+            |> (fun x -> System.String.Join("; ", x))
 
     member this.ErrorWithMessageExistsAt(message, startLine, startColumn) =
         this.ErrorsAt(startLine, startColumn)
-            |> Seq.exists (fun (_, e) -> e = message)
+        |> Seq.exists (fun (_, e) -> e = message)
 
     member __.ErrorWithMessageExists(message) =
         errorRanges |> Seq.exists (fun (_, e) -> e = message)
 
     [<SetUp>]
-    member __.SetUp() =
-        errorRanges.Clear()
+    member __.SetUp() = errorRanges.Clear()

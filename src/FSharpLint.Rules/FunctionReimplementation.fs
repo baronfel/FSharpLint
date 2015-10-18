@@ -83,8 +83,7 @@ module FunctionReimplementation =
             | node -> 
                 if not found then
                     traverseNode node |> List.fold patternShadowsIdentifier false
-                else 
-                    found
+                else found
 
         patternShadowsIdentifier false
 
@@ -191,20 +190,19 @@ module FunctionReimplementation =
                     if visitorInfo.FSharpVersion.Major >= 4 || 
                        (not << isConstructor) expression then
                         Some(ident)
-                    else
-                        None
+                    else None
                 | _ -> None
 
         isFunctionPointless expression parameters 
-            |> Option.iter (fun identifier ->
-                let identifier = 
-                    identifier 
-                        |> List.map (fun x -> DemangleOperatorName x.idText)
-                        |> String.concat "."
+        |> Option.iter (fun identifier ->
+            let identifier = 
+                identifier 
+                |> List.map (fun x -> DemangleOperatorName x.idText)
+                |> String.concat "."
 
-                let errorFormatString = Resources.GetString("RulesReimplementsFunction")
-                let error = System.String.Format(errorFormatString, identifier)
-                visitorInfo.PostError range error)
+            let errorFormatString = Resources.GetString("RulesReimplementsFunction")
+            let error = System.String.Format(errorFormatString, identifier)
+            visitorInfo.PostError range error)
     
     let visitor visitorInfo checkFile astNode = 
         match astNode.Node with
@@ -229,4 +227,4 @@ module FunctionReimplementation =
               Visitor = Ast(visitor) }
 
         interface IRegisterPlugin with
-            member __.RegisterPlugin = plugin
+            member __.RegisterPlugin _ = plugin

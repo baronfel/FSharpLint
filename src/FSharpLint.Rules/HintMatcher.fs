@@ -579,13 +579,13 @@ module HintMatcher =
             not <| isParameterDelegateType 0 methodIdent
         | _ -> true
 
-    let visitor getHints visitorInfo checkFile (astNode:CurrentNode) = 
+    let visitor hints visitorInfo checkFile (astNode:CurrentNode) = 
         if astNode.IsSuppressed(AnalyserName) |> not then
             match astNode.Node with
             | AstNode.Expression(SynExpr.Paren(_))
             | AstNode.Pattern(SynPat.Paren(_)) -> Continue
             | AstNode.Expression(expr) -> 
-                for hint in getHints visitorInfo.Config do
+                for hint in hints do
                     let arguments =
                         { MatchExpression.LambdaArguments = Map.ofList []
                           MatchExpression.Expression = expr
@@ -603,7 +603,7 @@ module HintMatcher =
 
                 Continue
             | AstNode.Pattern(pattern) ->
-                for hint in getHints visitorInfo.Config do
+                for hint in hints do
                     if MatchPattern.matchHintPattern (pattern, hint.Match) then
                         hintError hint visitorInfo pattern.Range
                     
@@ -622,9 +622,8 @@ module HintMatcher =
             []
 
     type RegisterHintVisitor() = 
-        let plugin =
-            { Name = AnalyserName
-              Visitor = Ast(visitor getHintsFromConfig) }
-
         interface IRegisterPlugin with
-            member __.RegisterPlugin = plugin
+            member __.RegisterPlugin config = 
+                let hints = getHintsFromConfig config
+                { Name = AnalyserName
+                  Visitor = Ast(visitor hints) }

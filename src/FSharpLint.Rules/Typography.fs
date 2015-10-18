@@ -182,4 +182,4 @@ module Typography =
             }
 
         interface IRegisterPlugin with
-            member __.RegisterPlugin with get() = plugin
+            member __.RegisterPlugin _ = plugin
