@@ -52,6 +52,7 @@
     <Compile Include="TestAstInfo.fs" />
     <Compile Include="TestHintParser.fs" />
     <Compile Include="TestAst.fs" />
+    <Compile Include="TestExpressionUtilities.fs" />
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>

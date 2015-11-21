@@ -52,23 +52,23 @@ module ExpressionUtilities =
         | SynExpr.Paren(x, _, _, _) -> removeParens x
         | x -> x
         
-    let flattenFunctionApplication expr =
-        let rec flattenFunctionApplication exprs = function
+    /// Inlines pipe operators to give a flat function application expression
+    /// e.g. `x |> List.map id` to `List.map id x`. 
+    let flattenFunctionApplication functionApplication =
+        let rec flatten flattened exprToFlatten =
+            match exprToFlatten with
             | SynExpr.App(_, _, x, y, _) -> 
                 match removeParens x with
-                | SynExpr.App(_, true, SynExpr.Ident(op), rightExpr, _) ->
-                    match identAsDecompiledOpName op with
-                    | "|>" | "||>" | "|||>" ->
-                        let flattened = flattenFunctionApplication [] y
-                        flattened@[rightExpr]
-                    | "<|" | "<||" | "<|||" ->
-                        let flattened = flattenFunctionApplication [] rightExpr
-                        flattened@[y]
-                    | _ -> 
-                        flattenFunctionApplication (removeParens y::exprs) (removeParens x)
-                | _ -> 
-                    flattenFunctionApplication (removeParens y::exprs) (removeParens x)
-            | x -> 
-                x::exprs
+                | SynExpr.App(_, true, SynExpr.Ident(op), rhs, _) as app ->
+                    let lhs = y
 
-        flattenFunctionApplication [] expr
+                    match identAsDecompiledOpName op with
+                    | "|>" | "||>" | "|||>" -> flatten (removeParens rhs::flattened) lhs
+                    | "<|" | "<||" | "<|||" -> flatten (removeParens lhs::flattened) rhs
+                    | _ -> flatten (removeParens lhs::flattened) app
+                | x -> 
+                    let leftExpr, rightExpr = (x, y)
+                    flatten (removeParens rightExpr::flattened) leftExpr
+            | expr -> expr::flattened
+
+        flatten [] functionApplication
