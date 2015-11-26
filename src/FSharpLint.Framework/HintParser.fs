@@ -104,7 +104,7 @@ module HintParser =
             { Edges: Node list
               Depth: int
               Match: MergedHintKey
-              Suggestions: Suggestion list }
+              Suggestions: Hint list }
  
         let private getKeyAndChildren = function
             | Expression.InfixOperator(opIdent, lhs, rhs) ->
@@ -153,13 +153,13 @@ module HintParser =
  
             depthFirstTraversal hint.Match 0
  
-            (nodes |> Seq.toList, hint.Suggestion)
+            (nodes |> Seq.toList, hint)
  
-        type private HintList = (MergedHintKey * int) list * Suggestion
+        type private HintList = (MergedHintKey * int) list * Hint
  
         type private TransposedNode =
             | HintNode of key:MergedHintKey * depth:int * rest:HintList
-            | EndOfHint of Suggestion
+            | EndOfHint of Hint
  
         /// Gets the head of each given list
         let private transposeHead hintLists =
@@ -198,18 +198,18 @@ module HintParser =
  
                 let edges = getEdges transposed
  
-                let suggestions =
+                let hints =
                     transposed
                     |> Seq.choose 
                         (function 
                         | HintNode(_) -> None 
-                        | EndOfHint(suggestion) -> Some(suggestion))
+                        | EndOfHint(hint) -> Some(hint))
                     |> Seq.toList
  
                 { Edges = edges 
                   Depth = depth
                   Match = key
-                  Suggestions = suggestions }
+                  Suggestions = hints }
  
             let transposed = 
                 hints |> List.map hintToList |> transposeHead

@@ -35,11 +35,11 @@ type TestMergeSyntaxTrees() =
                     [{ Edges = []
                        Depth = 1
                        Match = MergedHintKey.Variable('x')
-                       Suggestions = [Expr(Expression.Variable('x'))] }
+                       Suggestions = [hint2] }
                      { Edges = []
                        Depth = 1
                        Match = MergedHintKey.Identifier(["id"])
-                       Suggestions = [Expr(Expression.Identifier(["id"]))] }]
+                       Suggestions = [hint] }]
 
                 let expectedMergedList =
                     [{ Edges = 

@@ -63,7 +63,7 @@ module ExpressionUtilities =
                     let lhs = y
 
                     match identAsDecompiledOpName op with
-                    | "|>" | "||>" | "|||>" -> flatten (removeParens rhs::flattened) lhs
+                    | "|>" | "||>" | "|||>" -> flatten [rhs] lhs
                     | "<|" | "<||" | "<|||" -> flatten (removeParens lhs::flattened) rhs
                     | _ -> flatten (removeParens lhs::flattened) app
                 | x -> 
