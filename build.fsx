@@ -39,16 +39,23 @@ Target.create "RunFunctionalTests" (fun _ ->
   DotNet.restore id "tests/FSharpLint.FunctionalTest.TestedProject/FSharpLint.FunctionalTest.TestedProject.sln"
   DotNet.test filterPerformanceTests "tests/FSharpLint.FunctionalTest")
 
+
+module ProcessResult = 
+  let ensureOk (p: ProcessResult) = 
+    if p.OK then ()
+    else
+      failwithf "Process exited with code %d:\n%A" p.ExitCode (p.Errors |> String.concat "\r\n\t")
+
 Target.create "Package" (fun _ ->
-    // TODO: fix pack warning on deprecated licenseUrl param
-    let cliArgs = { MSBuild.CliArguments.Create() with NoWarn = Some ["NU5125"] }
-    let configure (c:DotNet.PackOptions) =
-      { c with
-          Configuration = DotNet.Release
-          OutputPath = Some "../../packaging"
-          MSBuildParams = cliArgs }
-    DotNet.pack configure "src/FSharpLint.Core/FSharpLint.Core.fsproj"
-    DotNet.pack configure "src/FSharpLint.Console/FSharpLint.Console.fsproj")
+    let execConfig (c: DotNet.Options) =
+        { c with
+            CustomParams = Some(sprintf "--output \"../../packaging\" --configuration Release \"-p:NoWarn=NU5125\" -p:Version=%s" (string release.NugetVersion)) }
+    DotNet.exec execConfig "pack" "src/FSharpLint.Core/FSharpLint.Core.fsproj"
+    |> ProcessResult.ensureOk
+    
+    DotNet.exec execConfig "pack" "src/FSharpLint.Console/FSharpLint.Console.fsproj"
+    |> ProcessResult.ensureOk
+)
 
 Target.create "PublishPackages" (fun _ -> Paket.push(fun p -> { p with WorkingDir = "packaging" }))
 

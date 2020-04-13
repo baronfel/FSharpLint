@@ -8,4 +8,4 @@ dotnet tool restore
 
 dotnet restore build.proj --verbosity n
 
-dotnet fake run build.fsx
+dotnet fake run build.fsx "$@"
