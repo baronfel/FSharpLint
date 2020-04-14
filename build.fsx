@@ -49,7 +49,7 @@ module ProcessResult =
 Target.create "Package" (fun _ ->
     let execConfig (c: DotNet.Options) =
         { c with
-            CustomParams = Some(sprintf "--output \"../../packaging\" --configuration Release \"-p:NoWarn=NU5125\" -p:Version=%s" (string release.NugetVersion)) }
+            CustomParams = Some(sprintf "--output \"./packaging\" --configuration Release \"-p:NoWarn=NU5125\" -p:Version=%s" (string release.NugetVersion)) }
     DotNet.exec execConfig "pack" "src/FSharpLint.Core/FSharpLint.Core.fsproj"
     |> ProcessResult.ensureOk
     
