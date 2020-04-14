@@ -7,7 +7,7 @@
     <Title>FSharpLint.Core</Title>
     <Description>API to programmatically run FSharpLint.</Description>
     <Authors>Matthew Mcveigh</Authors>
-    <PackageLicenseUrl>https://github.com/fsprojects/FSharpLint/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>http://fsprojects.github.com/FSharpLint</PackageProjectUrl>
     <PackageTags>F#;fsharp;lint;FSharpLint;fslint;api</PackageTags>
     <EnableDefaultItems>false</EnableDefaultItems>

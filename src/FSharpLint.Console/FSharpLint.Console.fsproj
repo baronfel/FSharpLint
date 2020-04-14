@@ -7,7 +7,7 @@
     <Title>FSharpLint.Console</Title>
     <Description>Console application to run FSharpLint.</Description>
     <Authors>Matthew Mcveigh</Authors>
-    <PackageLicenseUrl>https://github.com/fsprojects/FSharpLint/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>http://fsprojects.github.com/FSharpLint</PackageProjectUrl>
     <PackageTags>F#;fsharp;lint;FSharpLint;fslint;cli</PackageTags>
     <PackageType>DotNetCliTool</PackageType>
